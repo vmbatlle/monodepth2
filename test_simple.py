@@ -120,10 +120,20 @@ def test_simple(args):
 
             # PREDICTION
             input_image = input_image.to(device)
-            features = encoder(input_image)
-            outputs = depth_decoder(features)
 
-            disp = outputs[("disp", 0)]
+            # Use torch.jit to generate a torch.jit.ScriptModule.
+            sm = torch.jit.script(encoder)
+            # Save the model
+            sm.save("encoder.cpt")
+
+            features = list(encoder(input_image))
+
+            # Use torch.jit to generate a torch.jit.ScriptModule.
+            sm = torch.jit.script(depth_decoder)
+            # Save the model
+            sm.save("decoder.cpt")
+
+            disp = depth_decoder(features)
             disp_resized = torch.nn.functional.interpolate(
                 disp, (original_height, original_width), mode="bilinear", align_corners=False)
 
